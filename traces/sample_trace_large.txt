@@ -1,0 +1,40 @@
+# Mixed instruction/data-style access pattern for set-associative experiments.
+# One unsigned 32-bit hexadecimal byte address is present on each data line.
+
+# Warm a compact sequential instruction region.
+0x00001000
+0x00001010
+0x00001040
+0x00001080
+0x000010C0
+0x00001100
+0x00001140
+0x00001180
+0x00001000
+0x00001040
+0x00001100
+
+# Repeated data working set.
+0x00100000
+0x00100020
+0x00100040
+0x00100080
+0x00100100
+0x00100000
+0x00100040
+0x00100100
+
+# Deliberate conflict candidates for a 32 KiB, 64-byte direct-mapped cache.
+0x00002000
+0x0000A000
+0x00012000
+0x00002000
+0x0000A000
+
+# Return to earlier regions.
+0x00001010
+0x00100020
+0x00001180
+0x00100080
+0x00001000
+0x00100000

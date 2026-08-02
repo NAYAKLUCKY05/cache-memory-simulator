@@ -1,0 +1,10 @@
+# Small direct-mapped example for the default 32 KiB, 64-byte cache.
+# Addresses 0x00000010 and 0x00008010 map to the same cache set.
+0x00000010
+0x00000020
+0x00000040
+
+0x00008010
+0x00000010
+0x00000040
+0x00008010
