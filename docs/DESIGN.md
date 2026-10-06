@@ -1,71 +1,66 @@
 # Design Notes
 
-## Modular architecture
+Why things are built the way they are.
 
-The simulator uses modules with narrow responsibilities rather than a single
-large program. Cache modeling changes are therefore local to `cache.c`, trace
-format changes are local to `parser.c`, and presentation changes are local to
-the report function in `simulator.c`. This is easier to review, test, and
-extend than coupling command-line parsing to cache internals.
+## One code path for every organization
 
-Public headers describe the contract between modules. Implementations retain
-their helper functions as `static`, avoiding accidental global coupling.
+Direct-mapped, set-associative and fully associative caches differ only in
+how many sets and ways there are. The engine always does "find set, search its
+ways". Direct-mapped is `ways = 1` and fully associative is `sets = 1`. This
+avoids three separate implementations that could drift apart.
 
-## Dynamic cache allocation
+## Power-of-two sizes only
 
-Cache size, block size, and associativity are command-line configurable. A
-fixed compile-time cache array would either impose an artificial maximum or
-waste memory. Instead, the cache derives line count and set count at runtime,
-then allocates exactly the required hierarchy of sets and lines.
+Real caches use power-of-two sizes so the set index and offset can be taken
+straight from address bits with a shift and a mask. The simulator works the
+same way, so other sizes are rejected in `config_validate()`.
 
-Dynamic storage also makes the ownership model explicit: `cache_initialize`
-creates the resources and `cache_destroy` releases them. `Simulator` owns the
-cache for the duration of a simulation.
+## Timestamps instead of LRU lists or bits
 
-## Generic cache access path
+Each access increments a 64-bit clock, and each line stores the clock value of
+its last use (LRU) and of its fill (FIFO). Choosing a victim scans the ways for
+the smallest value. This costs O(ways) per miss, which is fine for software
+because associativity is small, and it is easy to verify. Hardware usually
+uses pseudo-LRU (a tree of bits) instead, because true LRU costs too much at
+high associativity.
 
-Direct-mapped, set-associative, and fully associative caches differ in set and
-way counts, not in the fundamental lookup operation. The implementation uses
-one algorithm:
+## Seeded random
 
-1. Decode tag, index, and offset.
-2. Locate the indexed set.
-3. Search its ways for a valid matching tag.
-4. On a miss, install into an invalid way or use the temporary victim.
+`Random` uses xorshift32 instead of `rand()`. `rand()` gives different
+sequences on different C libraries, which would make results differ between
+Windows and Linux. xorshift32 is three lines of code and gives the same
+sequence everywhere for the same `--seed`.
 
-This reduces duplicate code and makes replacement policy a focused future
-extension. A direct-mapped cache simply has one way per set; a fully
-associative cache has one set.
+## Write policies
 
-## Error handling
+- **Write-back + write-allocate** (the default): a store marks the line dirty.
+  Memory is updated only when that line is evicted (counted as a write-back).
+- **Write-through**: every store also goes to memory (counted as a direct write).
+  Lines are never dirty.
+- **No-write-allocate**: a write miss does not load the block and only writes
+  memory. This is usually combined with write-through.
 
-The public APIs return `bool` for operations that can fail and accept an
-optional caller-provided error buffer. This keeps diagnostics near their source
-without requiring global error state or dynamic error allocation.
+"Dirty at end" in the report counts lines that would still need writing back
+if the cache were flushed.
 
-The project validates:
+## Errors
 
-- null pointers at module boundaries;
-- zero, incompatible, and non-power-of-two cache dimensions;
-- unsupported address widths;
-- failed cache allocations;
-- missing trace files, malformed addresses, and read/close failures;
-- invalid command-line option values.
+Functions that can fail return `bool` and write a message into a buffer that
+the caller provides. There's no global error state, no `exit()` inside modules,
+and no heap allocation for messages. `main()` decides what to print and which
+exit code to return.
 
-Cleanup is performed on partial cache allocation, failed simulations, and the
-normal program exit path.
+## Output formats
 
-## Numerical behavior
+The text report is for people. CSV and JSON exist so that you can loop over
+configurations in a shell script and collect the results:
 
-Counters are 64-bit unsigned integers. Hit and miss rates are calculated using
-`double` conversion before division, avoiding integer truncation. A run with
-zero accesses reports `0.0%` for both rates.
+```sh
+for a in 1 2 4 8 16; do
+  ./build/cache_simulator --trace traces/sample_trace_mixed.txt \
+      --cache-size 1024 --associativity $a --format csv | tail -1
+done
+```
 
-## Extensibility
-
-Version 1.0 deliberately models only the valid bit and tag in each cache line.
-Future metadata such as dirty bits, replacement timestamps, or FIFO sequence
-numbers can be added to `CacheLine` without changing the simulator's orchestration.
-Likewise, the deterministic victim selection is isolated in the cache engine,
-where it can be replaced by a policy abstraction without changing the parser,
-statistics, or CLI modules.
+With `--verbose` and CSV/JSON, the per-access lines go to stderr so stdout
+remains valid CSV/JSON.

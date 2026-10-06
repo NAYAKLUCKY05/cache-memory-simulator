@@ -1,0 +1,11 @@
+trace,cache_size,associativity,replacement,hit_rate,amat
+hot_cold.txt,4096,4,LRU,19.8850,81.1150
+hot_cold.txt,8192,4,LRU,39.5450,61.4550
+hot_cold.txt,16384,4,LRU,75.0150,25.9850
+hot_cold.txt,32768,4,LRU,88.6250,12.3750
+hot_cold.txt,65536,4,LRU,89.0850,11.9150
+cyclic_36k.txt,4096,4,LRU,93.7500,7.2500
+cyclic_36k.txt,8192,4,LRU,93.7500,7.2500
+cyclic_36k.txt,16384,4,LRU,93.7500,7.2500
+cyclic_36k.txt,32768,4,LRU,95.8333,5.1667
+cyclic_36k.txt,65536,4,LRU,98.4375,2.5625

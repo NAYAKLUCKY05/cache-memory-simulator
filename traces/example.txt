@@ -1,0 +1,10 @@
+# Worked example: run with
+#   --cache-size 256 --block-size 64 --associativity 2 --verbose
+# 2 sets of 2 ways. Accesses 5 and 6 are conflict misses in set 0,
+# and access 5 evicts the dirty block written by access 1.
+W 0x1000
+R 0x1040
+R 0x1044
+R 0x2000
+R 0x3000
+R 0x1000

@@ -1,0 +1,13 @@
+trace,cache_size,associativity,replacement,hit_rate,amat
+matrix_row_major.txt,32768,1,LRU,93.7500,7.2500
+matrix_row_major.txt,32768,2,LRU,93.7500,7.2500
+matrix_row_major.txt,32768,8,LRU,93.7500,7.2500
+matrix_row_major.txt,32768,512,LRU,93.7500,7.2500
+matrix_col_major.txt,32768,1,LRU,0.0000,101.0000
+matrix_col_major.txt,32768,2,LRU,0.0000,101.0000
+matrix_col_major.txt,32768,8,LRU,0.0000,101.0000
+matrix_col_major.txt,32768,512,LRU,93.7500,7.2500
+matrix_col_padded.txt,32768,1,LRU,91.6504,9.3496
+matrix_col_padded.txt,32768,2,LRU,93.0176,7.9824
+matrix_col_padded.txt,32768,8,LRU,93.0176,7.9824
+matrix_col_padded.txt,32768,512,LRU,93.0176,7.9824

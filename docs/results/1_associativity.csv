@@ -1,0 +1,11 @@
+trace,cache_size,associativity,replacement,hit_rate,amat,evictions
+conflict_stride.txt,32768,1,LRU,0.0000,101.0000,7999
+conflict_stride.txt,32768,2,LRU,0.0000,101.0000,7998
+conflict_stride.txt,32768,4,LRU,0.0000,101.0000,7996
+conflict_stride.txt,32768,8,LRU,99.9000,1.1000,0
+conflict_stride.txt,32768,16,LRU,99.9000,1.1000,0
+memcpy.txt,32768,1,LRU,0.0000,101.0000,32256
+memcpy.txt,32768,2,LRU,93.7500,7.2500,1536
+memcpy.txt,32768,4,LRU,93.7500,7.2500,1536
+memcpy.txt,32768,8,LRU,93.7500,7.2500,1536
+memcpy.txt,32768,16,LRU,93.7500,7.2500,1536

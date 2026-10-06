@@ -1,0 +1,7 @@
+trace,cache_size,associativity,replacement,hit_rate,amat,evictions
+hot_cold.txt,32768,8,LRU,88.9150,12.0850,1705
+hot_cold.txt,32768,8,FIFO,82.8050,18.1950,2927
+hot_cold.txt,32768,8,Random,83.3100,17.6900,2826
+cyclic_36k.txt,32768,8,LRU,93.7500,7.2500,1792
+cyclic_36k.txt,32768,8,FIFO,93.7500,7.2500,1792
+cyclic_36k.txt,32768,8,Random,97.4609,3.5391,424

@@ -5,25 +5,29 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/** Receives one validated address from a trace file. */
-typedef bool (*TraceAddressCallback)(uint32_t address, size_t line_number,
-                                     void *context);
+#include "cache.h"
 
-/**
- * Parses a text trace and invokes a callback for each address.
+/* Called once per trace entry. Return false to stop reading. */
+typedef bool (*TraceCallback)(AccessType type, uint32_t address,
+                              size_t line_number, void *context);
+
+/*
+ * Trace format, one access per line:
  *
- * Blank lines and lines beginning with '#' are ignored. Addresses must be
- * unsigned 32-bit hexadecimal values, with an optional 0x prefix.
+ *   0x1000        read (no operation given)
+ *   R 0x1000      read
+ *   W 0x1000      write
  *
- * @param trace_path Path to the trace file.
- * @param callback Function invoked for each parsed address.
- * @param context Caller-owned data passed to callback.
- * @param error_message Optional buffer that receives a human-readable error.
- * @param error_message_size Size of error_message in bytes.
- * @return true if the whole trace was processed; otherwise false.
+ * Addresses are 32-bit hex, 0x prefix optional. Blank lines and lines
+ * starting with '#' are skipped.
  */
-bool parser_read_trace(const char *trace_path, TraceAddressCallback callback,
+bool parser_read_trace(const char *trace_path, TraceCallback callback,
                        void *context, char *error_message,
                        size_t error_message_size);
+
+/* Parses a single trace line. Returns false for blank/comment lines too,
+ * with *is_entry set to tell the two cases apart. Exposed for unit tests. */
+bool parser_parse_line(const char *line, AccessType *type, uint32_t *address,
+                       bool *is_entry);
 
 #endif

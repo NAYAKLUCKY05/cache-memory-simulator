@@ -2,84 +2,67 @@
 
 #include <stddef.h>
 
-/**
- * Calculates the percentage represented by a counter.
- *
- * @param count Counter value to convert.
- * @param total Total number of accesses.
- * @return Percentage in the range 0.0 to 100.0, or 0.0 when total is zero.
- */
-static double statistics_percentage(uint64_t count, uint64_t total)
+static double percent(uint64_t part, uint64_t total)
 {
-    if (total == 0U) {
-        return 0.0;
-    }
-
-    return ((double)count * 100.0) / (double)total;
+    return total == 0U ? 0.0 : (double)part * 100.0 / (double)total;
 }
 
-/**
- * Resets every counter to zero.
- *
- * @param statistics Statistics object to initialize. A NULL pointer is ignored.
- */
-void statistics_reset(Statistics *statistics)
+void statistics_reset(Statistics *stats)
 {
-    if (statistics == NULL) {
+    if (stats != NULL) {
+        *stats = (Statistics){0};
+    }
+}
+
+void statistics_record(Statistics *stats, AccessType type,
+                       const CacheAccessResult *result)
+{
+    if (stats == NULL || result == NULL) {
         return;
     }
 
-    statistics->total_accesses = 0U;
-    statistics->hits = 0U;
-    statistics->misses = 0U;
-}
-
-/**
- * Records one cache access outcome.
- *
- * @param statistics Statistics object to update. A NULL pointer is ignored.
- * @param was_hit true for a hit, false for a miss.
- */
-void statistics_record_access(Statistics *statistics, bool was_hit)
-{
-    if (statistics == NULL) {
-        return;
-    }
-
-    ++statistics->total_accesses;
-    if (was_hit) {
-        ++statistics->hits;
+    if (type == ACCESS_WRITE) {
+        ++stats->writes;
+        stats->write_hits += result->hit ? 1U : 0U;
     } else {
-        ++statistics->misses;
+        ++stats->reads;
+        stats->read_hits += result->hit ? 1U : 0U;
     }
+
+    stats->evictions += result->evicted ? 1U : 0U;
+    stats->writebacks += result->writeback ? 1U : 0U;
+    stats->memory_writes += result->memory_write ? 1U : 0U;
+    stats->blocks_fetched += result->allocated ? 1U : 0U;
 }
 
-/**
- * Calculates the percentage of accesses that were cache hits.
- *
- * @param statistics Statistics to query.
- * @return Hit rate in the range 0.0 to 100.0, or 0.0 for a NULL pointer.
- */
-double statistics_hit_rate(const Statistics *statistics)
+uint64_t statistics_accesses(const Statistics *stats)
 {
-    if (statistics == NULL) {
-        return 0.0;
-    }
-
-    return statistics_percentage(statistics->hits, statistics->total_accesses);
+    return stats == NULL ? 0U : stats->reads + stats->writes;
 }
 
-/**
- * Calculates the percentage of accesses that were cache misses.
- *
- * @param statistics Statistics to query.
- * @return Miss rate in the range 0.0 to 100.0, or 0.0 for a NULL pointer.
- */
-double statistics_miss_rate(const Statistics *statistics)
+uint64_t statistics_hits(const Statistics *stats)
 {
-    if (statistics == NULL) {
-        return 0.0;
-    }
+    return stats == NULL ? 0U : stats->read_hits + stats->write_hits;
+}
 
-    return statistics_percentage(statistics->misses, statistics->total_accesses);
+uint64_t statistics_misses(const Statistics *stats)
+{
+    return statistics_accesses(stats) - statistics_hits(stats);
+}
+
+double statistics_hit_rate(const Statistics *stats)
+{
+    return percent(statistics_hits(stats), statistics_accesses(stats));
+}
+
+double statistics_miss_rate(const Statistics *stats)
+{
+    return percent(statistics_misses(stats), statistics_accesses(stats));
+}
+
+double statistics_amat(const Statistics *stats, unsigned int hit_time,
+                       unsigned int miss_penalty)
+{
+    return (double)hit_time +
+           statistics_miss_rate(stats) / 100.0 * (double)miss_penalty;
 }

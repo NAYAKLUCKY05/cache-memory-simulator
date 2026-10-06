@@ -1,0 +1,9 @@
+trace,write_policy,write_allocate,hit_rate,blocks_fetched,writebacks,memory_writes,bytes_read_from_memory,bytes_written_to_memory
+memcpy.txt,Write-Back,1,93.7500,2048,768,0,131072,65536
+memcpy.txt,Write-Back,0,48.4375,512,0,16384,32768,65536
+memcpy.txt,Write-Through,1,93.7500,2048,0,16384,131072,65536
+memcpy.txt,Write-Through,0,48.4375,512,0,16384,32768,65536
+histogram.txt,Write-Back,1,99.6800,128,0,0,8192,8192
+histogram.txt,Write-Back,0,99.6800,128,0,0,8192,8192
+histogram.txt,Write-Through,1,99.6800,128,0,20000,8192,80000
+histogram.txt,Write-Through,0,99.6800,128,0,20000,8192,80000

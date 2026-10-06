@@ -1,0 +1,32 @@
+# Read/write trace for comparing write policies.
+# Use with a small cache, for example:
+#   --cache-size 256 --block-size 64 --associativity 2
+#
+# An array is filled (writes), read back, then a second array
+# pushes it out so the dirty lines have to be written back.
+
+W 0x00001000
+W 0x00001040
+W 0x00001080
+W 0x000010C0
+R 0x00001000
+R 0x00001040
+R 0x00001080
+R 0x000010C0
+W 0x00001004
+R 0x00001044
+
+# Second array maps onto the same sets.
+R 0x00002000
+R 0x00002040
+R 0x00002080
+R 0x000020C0
+R 0x00003000
+R 0x00003040
+R 0x00003080
+R 0x000030C0
+
+# Back to the first array.
+R 0x00001000
+W 0x00001040
+R 0x00001080

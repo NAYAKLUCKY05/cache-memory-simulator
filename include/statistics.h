@@ -1,45 +1,35 @@
 #ifndef CACHE_SIMULATOR_STATISTICS_H
 #define CACHE_SIMULATOR_STATISTICS_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
-/** Aggregate counters collected during a simulation run. */
+#include "cache.h"
+
 typedef struct Statistics {
-    uint64_t total_accesses;
-    uint64_t hits;
-    uint64_t misses;
+    uint64_t reads;
+    uint64_t writes;
+    uint64_t read_hits;
+    uint64_t write_hits;
+    uint64_t evictions;
+    uint64_t writebacks;       /* dirty lines written to memory on eviction */
+    uint64_t memory_writes;    /* stores sent straight to memory */
+    uint64_t blocks_fetched;   /* blocks read from memory into the cache */
 } Statistics;
 
-/**
- * Resets every counter to zero.
- *
- * @param statistics Statistics object to initialize.
- */
-void statistics_reset(Statistics *statistics);
+void statistics_reset(Statistics *stats);
+void statistics_record(Statistics *stats, AccessType type,
+                       const CacheAccessResult *result);
 
-/**
- * Records one cache access outcome.
- *
- * @param statistics Statistics object to update.
- * @param was_hit true for a hit, false for a miss.
- */
-void statistics_record_access(Statistics *statistics, bool was_hit);
+uint64_t statistics_accesses(const Statistics *stats);
+uint64_t statistics_hits(const Statistics *stats);
+uint64_t statistics_misses(const Statistics *stats);
 
-/**
- * Calculates the percentage of accesses that were cache hits.
- *
- * @param statistics Statistics to query.
- * @return Hit rate in the range 0.0 to 100.0.
- */
-double statistics_hit_rate(const Statistics *statistics);
+/* Percentages in the range 0..100. */
+double statistics_hit_rate(const Statistics *stats);
+double statistics_miss_rate(const Statistics *stats);
 
-/**
- * Calculates the percentage of accesses that were cache misses.
- *
- * @param statistics Statistics to query.
- * @return Miss rate in the range 0.0 to 100.0.
- */
-double statistics_miss_rate(const Statistics *statistics);
+/* Average memory access time = hit time + miss rate * miss penalty. */
+double statistics_amat(const Statistics *stats, unsigned int hit_time,
+                       unsigned int miss_penalty);
 
 #endif
